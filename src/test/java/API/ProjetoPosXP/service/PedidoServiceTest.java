@@ -1,9 +1,13 @@
 package API.ProjetoPosXP.service;
 
 import API.ProjetoPosXP.dto.ItemPedidoCreateDTO;
+import API.ProjetoPosXP.dto.ItemPedidoDTO;
 import API.ProjetoPosXP.dto.PedidoCreateDTO;
 import API.ProjetoPosXP.dto.PedidoDTO;
 import API.ProjetoPosXP.event.PedidoStatusEvent;
+import API.ProjetoPosXP.exception.BusinessException;
+import API.ProjetoPosXP.exception.EstoqueInsuficienteException;
+import API.ProjetoPosXP.mapper.PedidoMapper;
 import API.ProjetoPosXP.model.*;
 import API.ProjetoPosXP.repository.ClienteRepository;
 import API.ProjetoPosXP.repository.PedidoRepository;
@@ -38,6 +42,8 @@ class PedidoServiceTest {
     private ProdutoRepository produtoRepository;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private PedidoMapper pedidoMapper;
 
     @InjectMocks
     private PedidoService pedidoService;
@@ -45,12 +51,13 @@ class PedidoServiceTest {
     private Cliente cliente;
     private Produto produto;
     private Pedido pedido;
+    private PedidoDTO pedidoDTO;
 
     @BeforeEach
     void setUp() {
         cliente = Cliente.builder().id(1L).nome("João").build();
         produto = Produto.builder().id(1L).nome("Teclado").preco(new BigDecimal("100.00")).estoque(10).build();
-        
+
         ItemPedido item = ItemPedido.builder()
                 .id(1L)
                 .produto(produto)
@@ -65,39 +72,45 @@ class PedidoServiceTest {
                 .status(StatusPedido.AGUARDANDO_PAGAMENTO)
                 .itens(List.of(item))
                 .build();
-        
+
         item.setPedido(pedido);
+
+        pedidoDTO = new PedidoDTO(
+                1L, 1L, "João", pedido.getDataPedido(),
+                StatusPedido.AGUARDANDO_PAGAMENTO,
+                List.of(new ItemPedidoDTO(1L, 1L, "Teclado", 2, new BigDecimal("100.00"))));
     }
 
     @Test
     @DisplayName("Deve criar pedido com sucesso e baixar estoque")
     void deveCriarPedidoComSucesso() {
         PedidoCreateDTO dto = new PedidoCreateDTO(1L, List.of(new ItemPedidoCreateDTO(1L, 2)));
-        
+
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
         when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
-        
+        when(pedidoMapper.toDTO(any(Pedido.class))).thenReturn(pedidoDTO);
+
         PedidoDTO resultado = pedidoService.criarPedido(dto);
-        
+
         assertThat(resultado.status()).isEqualTo(StatusPedido.AGUARDANDO_PAGAMENTO);
-        assertThat(produto.getEstoque()).isEqualTo(8); // 10 - 2
+        assertThat(produto.getEstoque()).isEqualTo(8);
         verify(produtoRepository, times(1)).save(produto);
         verify(pedidoRepository, times(1)).save(any(Pedido.class));
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando estoque for insuficiente")
+    @DisplayName("Deve lançar EstoqueInsuficienteException quando estoque for insuficiente")
     void deveLancarExcecaoEstoqueInsuficiente() {
         PedidoCreateDTO dto = new PedidoCreateDTO(1L, List.of(new ItemPedidoCreateDTO(1L, 20)));
-        
+
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
         when(produtoRepository.findById(1L)).thenReturn(Optional.of(produto));
-        
+
         assertThatThrownBy(() -> pedidoService.criarPedido(dto))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(EstoqueInsuficienteException.class)
                 .hasMessageContaining("Estoque insuficiente");
-        
+
         verify(pedidoRepository, never()).save(any());
     }
 
@@ -106,35 +119,39 @@ class PedidoServiceTest {
     void deveCancelarPedidoComSucesso() {
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
-        
-        produto.setEstoque(8); // Simula estoque pós-pedido
+
+        produto.setEstoque(8);
         pedidoService.cancelarPedido(1L);
-        
+
         assertThat(pedido.getStatus()).isEqualTo(StatusPedido.CANCELADO);
-        assertThat(produto.getEstoque()).isEqualTo(10); // 8 + 2
+        assertThat(produto.getEstoque()).isEqualTo(10);
         verify(produtoRepository, times(1)).save(produto);
         verify(eventPublisher, times(1)).publishEvent(any(PedidoStatusEvent.class));
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao cancelar pedido já cancelado")
+    @DisplayName("Deve lançar BusinessException ao cancelar pedido já cancelado")
     void deveLancarExcecaoPedidoJaCancelado() {
         pedido.setStatus(StatusPedido.CANCELADO);
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
-        
+
         assertThatThrownBy(() -> pedidoService.cancelarPedido(1L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Pedido já está cancelado");
     }
 
     @Test
     @DisplayName("Deve atualizar status do pedido")
     void deveAtualizarStatus() {
+        PedidoDTO dtoPago = new PedidoDTO(
+                1L, 1L, "João", pedido.getDataPedido(), StatusPedido.PAGO, pedidoDTO.itens());
+
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
-        
+        when(pedidoMapper.toDTO(any(Pedido.class))).thenReturn(dtoPago);
+
         PedidoDTO resultado = pedidoService.atualizarStatus(1L, StatusPedido.PAGO);
-        
+
         assertThat(resultado.status()).isEqualTo(StatusPedido.PAGO);
         verify(pedidoRepository, times(1)).save(pedido);
         verify(eventPublisher, times(1)).publishEvent(any(PedidoStatusEvent.class));

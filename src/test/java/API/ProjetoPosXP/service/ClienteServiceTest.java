@@ -1,6 +1,8 @@
 package API.ProjetoPosXP.service;
 
 import API.ProjetoPosXP.dto.ClienteDTO;
+import API.ProjetoPosXP.exception.ResourceNotFoundException;
+import API.ProjetoPosXP.mapper.ClienteMapper;
 import API.ProjetoPosXP.model.Cliente;
 import API.ProjetoPosXP.repository.ClienteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +27,9 @@ class ClienteServiceTest {
     @Mock
     private ClienteRepository clienteRepository;
 
+    @Mock
+    private ClienteMapper clienteMapper;
+
     @InjectMocks
     private ClienteService clienteService;
 
@@ -47,18 +52,21 @@ class ClienteServiceTest {
     @DisplayName("Deve listar todos os clientes")
     void deveListarTodosOsClientes() {
         when(clienteRepository.findAll()).thenReturn(List.of(cliente));
+        when(clienteMapper.toDTO(cliente)).thenReturn(clienteDTO);
         
         List<ClienteDTO> resultado = clienteService.listarTodos();
         
         assertThat(resultado).hasSize(1);
         assertThat(resultado.get(0).nome()).isEqualTo("João Silva");
         verify(clienteRepository, times(1)).findAll();
+        verify(clienteMapper, times(1)).toDTO(cliente);
     }
 
     @Test
     @DisplayName("Deve buscar cliente por ID com sucesso")
     void deveBuscarPorIdComSucesso() {
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(clienteMapper.toDTO(cliente)).thenReturn(clienteDTO);
         
         ClienteDTO resultado = clienteService.buscarPorId(1L);
         
@@ -68,33 +76,42 @@ class ClienteServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao buscar cliente inexistente")
+    @DisplayName("Deve lançar ResourceNotFoundException ao buscar cliente inexistente")
     void deveLancarExcecaoAoBuscarInexistente() {
         when(clienteRepository.findById(2L)).thenReturn(Optional.empty());
         
         assertThatThrownBy(() -> clienteService.buscarPorId(2L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Cliente não encontrado");
     }
 
     @Test
     @DisplayName("Deve salvar novo cliente")
     void deveSalvarNovoCliente() {
+        when(clienteMapper.toEntity(clienteDTO)).thenReturn(cliente);
         when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
+        when(clienteMapper.toDTO(cliente)).thenReturn(clienteDTO);
         
         ClienteDTO resultado = clienteService.salvar(clienteDTO);
         
         assertThat(resultado.nome()).isEqualTo("João Silva");
+        verify(clienteMapper, times(1)).toEntity(clienteDTO);
         verify(clienteRepository, times(1)).save(any(Cliente.class));
+        verify(clienteMapper, times(1)).toDTO(cliente);
     }
 
     @Test
     @DisplayName("Deve atualizar cliente existente")
     void deveAtualizarCliente() {
-        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(cliente);
-        
         ClienteDTO novoDto = new ClienteDTO(1L, "João Modificado", "joao@mod.com", "111");
+        Cliente clienteAtualizado = Cliente.builder()
+                .id(1L).nome("João Modificado").email("joao@mod.com").cpf("111").build();
+        ClienteDTO dtoAtualizado = new ClienteDTO(1L, "João Modificado", "joao@mod.com", "111");
+
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteAtualizado);
+        when(clienteMapper.toDTO(clienteAtualizado)).thenReturn(dtoAtualizado);
+        
         ClienteDTO resultado = clienteService.atualizar(1L, novoDto);
         
         assertThat(resultado.nome()).isEqualTo("João Modificado");
@@ -115,12 +132,12 @@ class ClienteServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao deletar cliente inexistente")
+    @DisplayName("Deve lançar ResourceNotFoundException ao deletar cliente inexistente")
     void deveLancarExcecaoAoDeletarInexistente() {
         when(clienteRepository.existsById(2L)).thenReturn(false);
         
         assertThatThrownBy(() -> clienteService.deletar(2L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Cliente não encontrado");
     }
 }
