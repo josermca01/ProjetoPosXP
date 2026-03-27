@@ -3,6 +3,7 @@ package API.ProjetoPosXP.service;
 import API.ProjetoPosXP.dto.ItemPedidoCreateDTO;
 import API.ProjetoPosXP.dto.PedidoCreateDTO;
 import API.ProjetoPosXP.dto.PedidoDTO;
+import API.ProjetoPosXP.event.PedidoStatusEvent;
 import API.ProjetoPosXP.model.*;
 import API.ProjetoPosXP.repository.ClienteRepository;
 import API.ProjetoPosXP.repository.PedidoRepository;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,6 +36,8 @@ class PedidoServiceTest {
     private ClienteRepository clienteRepository;
     @Mock
     private ProdutoRepository produtoRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private PedidoService pedidoService;
@@ -109,6 +113,7 @@ class PedidoServiceTest {
         assertThat(pedido.getStatus()).isEqualTo(StatusPedido.CANCELADO);
         assertThat(produto.getEstoque()).isEqualTo(10); // 8 + 2
         verify(produtoRepository, times(1)).save(produto);
+        verify(eventPublisher, times(1)).publishEvent(any(PedidoStatusEvent.class));
     }
 
     @Test
@@ -132,5 +137,6 @@ class PedidoServiceTest {
         
         assertThat(resultado.status()).isEqualTo(StatusPedido.PAGO);
         verify(pedidoRepository, times(1)).save(pedido);
+        verify(eventPublisher, times(1)).publishEvent(any(PedidoStatusEvent.class));
     }
 }

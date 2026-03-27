@@ -4,10 +4,12 @@ import API.ProjetoPosXP.dto.ItemPedidoDTO;
 import API.ProjetoPosXP.dto.PedidoCreateDTO;
 import API.ProjetoPosXP.dto.PedidoDTO;
 import API.ProjetoPosXP.model.*;
+import API.ProjetoPosXP.event.PedidoStatusEvent;
 import API.ProjetoPosXP.repository.ClienteRepository;
 import API.ProjetoPosXP.repository.PedidoRepository;
 import API.ProjetoPosXP.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<PedidoDTO> listarTodos() {
@@ -79,7 +82,12 @@ public class PedidoService {
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com ID: " + id));
         
         pedido.setStatus(novoStatus);
-        return toDTO(pedidoRepository.save(pedido));
+        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+        
+        // Notifica Observadores
+        eventPublisher.publishEvent(new PedidoStatusEvent(this, pedidoSalvo, novoStatus));
+        
+        return toDTO(pedidoSalvo);
     }
 
     @Transactional
@@ -99,7 +107,10 @@ public class PedidoService {
         });
 
         pedido.setStatus(StatusPedido.CANCELADO);
-        pedidoRepository.save(pedido);
+        Pedido pedidoCancelado = pedidoRepository.save(pedido);
+        
+        // Notifica Observadores
+        eventPublisher.publishEvent(new PedidoStatusEvent(this, pedidoCancelado, StatusPedido.CANCELADO));
     }
 
     private PedidoDTO toDTO(Pedido pedido) {
