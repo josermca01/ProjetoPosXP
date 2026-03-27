@@ -26,6 +26,19 @@ public class ProdutoController {
         return appFacade.listarProdutos();
     }
 
+    @GetMapping("/count")
+    @Operation(summary = "Contar total de produtos", description = "Retorna o número total de produtos no estoque")
+    public long contar() {
+        return appFacade.contarProdutos();
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Buscar produtos por nome", description = "Retorna uma lista de produtos que contêm o termo pesquisado")
+    public List<ProdutoDTO> buscarPorNome(@RequestParam String nome) {
+        return appFacade.buscarProdutosPorNome(nome);
+    }
+
+
     @GetMapping("/{id}")
     @Operation(summary = "Buscar produto por ID", description = "Pesquisa os detalhes de um produto específico")
     @ApiResponse(responseCode = "200", description = "Produto encontrado")

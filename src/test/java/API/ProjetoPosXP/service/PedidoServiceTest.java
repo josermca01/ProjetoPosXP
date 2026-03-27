@@ -159,6 +159,31 @@ class PedidoServiceTest {
     }
 
     @Test
+    @DisplayName("Deve contar o total de pedidos")
+    void deveContarPedidos() {
+        when(pedidoRepository.count()).thenReturn(100L);
+        
+        long total = pedidoService.contar();
+        
+        assertThat(total).isEqualTo(100L);
+        verify(pedidoRepository, times(1)).count();
+    }
+
+    @Test
+    @DisplayName("Deve buscar pedidos por nome do cliente")
+    void deveBuscarPorClienteNome() {
+        String nomePesquisa = "João";
+        when(pedidoRepository.findByClienteNomeContainingIgnoreCase(nomePesquisa)).thenReturn(List.of(pedido));
+        when(pedidoMapper.toDTO(pedido)).thenReturn(pedidoDTO);
+        
+        List<PedidoDTO> resultado = pedidoService.buscarPorClienteNome(nomePesquisa);
+        
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).clienteNome()).isEqualTo("João");
+        verify(pedidoRepository, times(1)).findByClienteNomeContainingIgnoreCase(nomePesquisa);
+    }
+
+    @Test
 
     @DisplayName("Deve buscar histórico de pedidos do cliente")
     void deveBuscarHistoricoDoCliente() {
@@ -173,4 +198,3 @@ class PedidoServiceTest {
         verify(pedidoRepository, times(1)).findByClienteId(1L);
     }
 }
-

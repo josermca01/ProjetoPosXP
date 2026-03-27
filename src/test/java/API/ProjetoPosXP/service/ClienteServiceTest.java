@@ -140,4 +140,31 @@ class ClienteServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Cliente não encontrado");
     }
+
+    @Test
+
+    @DisplayName("Deve contar o total de clientes")
+    void deveContarClientes() {
+        when(clienteRepository.count()).thenReturn(10L);
+        
+        long total = clienteService.contar();
+        
+        assertThat(total).isEqualTo(10L);
+        verify(clienteRepository, times(1)).count();
+    }
+
+    @Test
+    @DisplayName("Deve buscar clientes por nome")
+    void deveBuscarPorNome() {
+        String nomePesquisa = "João";
+        when(clienteRepository.findByNomeContainingIgnoreCase(nomePesquisa)).thenReturn(List.of(cliente));
+        when(clienteMapper.toDTO(cliente)).thenReturn(clienteDTO);
+        
+        List<ClienteDTO> resultado = clienteService.buscarPorNome(nomePesquisa);
+        
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).nome()).isEqualTo("João Silva");
+        verify(clienteRepository, times(1)).findByNomeContainingIgnoreCase(nomePesquisa);
+    }
 }
+

@@ -26,6 +26,19 @@ public class ClienteController {
         return appFacade.listarClientes();
     }
 
+    @GetMapping("/count")
+    @Operation(summary = "Contar total de clientes", description = "Retorna o número total de clientes na base")
+    public long contar() {
+        return appFacade.contarClientes();
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Buscar clientes por nome", description = "Retorna uma lista de clientes que contêm o termo pesquisado")
+    public List<ClienteDTO> buscarPorNome(@RequestParam String nome) {
+        return appFacade.buscarClientesPorNome(nome);
+    }
+
+
     @GetMapping("/{id}/pedidos")
     @Operation(summary = "Consultar histórico de pedidos", description = "Retorna todos os pedidos realizados por um cliente")
     @ApiResponse(responseCode = "200", description = "Histórico recuperado com sucesso")

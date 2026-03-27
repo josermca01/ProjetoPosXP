@@ -29,6 +29,19 @@ public class PedidoController {
         return appFacade.listarPedidos();
     }
 
+    @GetMapping("/count")
+    @Operation(summary = "Contar total de pedidos", description = "Retorna o número total de pedidos realizados")
+    public long contar() {
+        return appFacade.contarPedidos();
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Buscar pedidos por nome do cliente", description = "Retorna uma lista de pedidos realizados por clientes com o termo pesquisado")
+    public List<PedidoDTO> buscarPorClienteNome(@RequestParam String nome) {
+        return appFacade.buscarPedidosPorClienteNome(nome);
+    }
+
+
     @GetMapping("/{id}")
     @Operation(summary = "Consultar pedido por ID", description = "Retorna os itens e status de um pedido específico")
     @ApiResponse(responseCode = "200", description = "Pedido encontrado")

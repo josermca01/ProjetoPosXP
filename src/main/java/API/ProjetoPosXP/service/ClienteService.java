@@ -27,6 +27,19 @@ public class ClienteService {
     }
 
     @Transactional(readOnly = true)
+    public long contar() {
+        return clienteRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClienteDTO> buscarPorNome(String nome) {
+        return clienteRepository.findByNomeContainingIgnoreCase(nome).stream()
+                .map(clienteMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
     public ClienteDTO buscarPorId(Long id) {
         return clienteRepository.findById(id)
                 .map(clienteMapper::toDTO)

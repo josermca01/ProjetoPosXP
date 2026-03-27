@@ -38,6 +38,19 @@ public class PedidoService {
     }
 
     @Transactional(readOnly = true)
+    public long contar() {
+        return pedidoRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PedidoDTO> buscarPorClienteNome(String clienteNome) {
+        return pedidoRepository.findByClienteNomeContainingIgnoreCase(clienteNome).stream()
+                .map(pedidoMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
     public List<PedidoDTO> buscarPorCliente(Long clienteId) {
         if (!clienteRepository.existsById(clienteId)) {
             throw new ResourceNotFoundException("Cliente", clienteId);

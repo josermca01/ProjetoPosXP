@@ -143,4 +143,31 @@ class ProdutoServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Produto não encontrado");
     }
+
+    @Test
+
+    @DisplayName("Deve contar o total de produtos")
+    void deveContarProdutos() {
+        when(produtoRepository.count()).thenReturn(50L);
+        
+        long total = produtoService.contar();
+        
+        assertThat(total).isEqualTo(50L);
+        verify(produtoRepository, times(1)).count();
+    }
+
+    @Test
+    @DisplayName("Deve buscar produtos por nome")
+    void deveBuscarPorNome() {
+        String nomePesquisa = "Teclado";
+        when(produtoRepository.findByNomeContainingIgnoreCase(nomePesquisa)).thenReturn(List.of(produto));
+        when(produtoMapper.toDTO(produto)).thenReturn(produtoDTO);
+        
+        List<ProdutoDTO> resultado = produtoService.buscarPorNome(nomePesquisa);
+        
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).nome()).isEqualTo("Teclado");
+        verify(produtoRepository, times(1)).findByNomeContainingIgnoreCase(nomePesquisa);
+    }
 }
+

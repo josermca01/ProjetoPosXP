@@ -27,6 +27,19 @@ public class ProdutoService {
     }
 
     @Transactional(readOnly = true)
+    public long contar() {
+        return produtoRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProdutoDTO> buscarPorNome(String nome) {
+        return produtoRepository.findByNomeContainingIgnoreCase(nome).stream()
+                .map(produtoMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
     public ProdutoDTO buscarPorId(Long id) {
         return produtoRepository.findById(id)
                 .map(produtoMapper::toDTO)

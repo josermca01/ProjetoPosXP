@@ -120,10 +120,17 @@ Acesse a documentação interativa em:
 ### Principais Endpoints:
 
 - `GET /api/clientes` - Lista todos os clientes.
+- `GET /api/clientes/count` - Retorna o total de clientes cadastrados.
+- `GET /api/clientes/search?nome=...` - Busca clientes por nome (case-insensitive).
 - `GET /api/clientes/{id}/pedidos` - Consulta o histórico completo de pedidos de um cliente.
+- `GET /api/produtos/count` - Retorna o total de produtos no estoque.
+- `GET /api/produtos/search?nome=...` - Busca produtos por nome.
 - `POST /api/produtos` - Cadastra um novo produto.
+- `GET /api/pedidos/count` - Retorna o total de pedidos realizados.
+- `GET /api/pedidos/search?nome=...` - Busca pedidos pelo nome do cliente.
 - `POST /api/pedidos` - Realiza o checkout de um pedido (baixa no estoque).
 - `PATCH /api/pedidos/{id}/status` - Atualiza o status e notifica o cliente.
+
 
 
 ## ✅ Testes

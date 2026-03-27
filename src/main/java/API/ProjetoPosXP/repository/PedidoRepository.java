@@ -7,5 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     java.util.List<Pedido> findByClienteId(Long clienteId);
+    java.util.List<Pedido> findByClienteNomeContainingIgnoreCase(String clienteNome);
 }
+
 

@@ -85,4 +85,30 @@ public class AppFacade {
     public void cancelarPedido(Long id) {
         pedidoService.cancelarPedido(id);
     }
+
+    // New common operations
+    public long contarClientes() {
+        return clienteService.contar();
+    }
+
+    public List<ClienteDTO> buscarClientesPorNome(String nome) {
+        return clienteService.buscarPorNome(nome);
+    }
+
+    public long contarProdutos() {
+        return produtoService.contar();
+    }
+
+    public List<ProdutoDTO> buscarProdutosPorNome(String nome) {
+        return produtoService.buscarPorNome(nome);
+    }
+
+    public long contarPedidos() {
+        return pedidoService.contar();
+    }
+
+    public List<PedidoDTO> buscarPedidosPorClienteNome(String nome) {
+        return pedidoService.buscarPorClienteNome(nome);
+    }
 }
+
