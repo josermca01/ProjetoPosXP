@@ -24,4 +24,9 @@ public class Cliente {
 
     @Column(nullable = false, unique = true)
     private String cpf;
+
+    @OneToMany(mappedBy = "cliente")
+    @Builder.Default
+    private java.util.List<Pedido> pedidos = new java.util.ArrayList<>();
 }
+

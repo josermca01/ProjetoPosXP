@@ -156,4 +156,20 @@ class PedidoServiceTest {
         verify(pedidoRepository, times(1)).save(pedido);
         verify(eventPublisher, times(1)).publishEvent(any(PedidoStatusEvent.class));
     }
+
+    @Test
+
+    @DisplayName("Deve buscar histórico de pedidos do cliente")
+    void deveBuscarHistoricoDoCliente() {
+        when(clienteRepository.existsById(1L)).thenReturn(true);
+        when(pedidoRepository.findByClienteId(1L)).thenReturn(List.of(pedido));
+        when(pedidoMapper.toDTO(pedido)).thenReturn(pedidoDTO);
+
+        List<PedidoDTO> resultado = pedidoService.buscarPorCliente(1L);
+
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).clienteNome()).isEqualTo("João");
+        verify(pedidoRepository, times(1)).findByClienteId(1L);
+    }
 }
+

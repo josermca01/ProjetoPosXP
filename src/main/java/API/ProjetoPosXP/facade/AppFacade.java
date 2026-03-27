@@ -39,6 +39,11 @@ public class AppFacade {
         clienteService.deletar(id);
     }
 
+    public List<PedidoDTO> consultarHistoricoPedidos(Long clienteId) {
+        return pedidoService.buscarPorCliente(clienteId);
+    }
+
+
     // Produto operations
     public List<ProdutoDTO> listarProdutos() {
         return produtoService.listarTodos();

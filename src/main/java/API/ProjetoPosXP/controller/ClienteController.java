@@ -26,6 +26,15 @@ public class ClienteController {
         return appFacade.listarClientes();
     }
 
+    @GetMapping("/{id}/pedidos")
+    @Operation(summary = "Consultar histórico de pedidos", description = "Retorna todos os pedidos realizados por um cliente")
+    @ApiResponse(responseCode = "200", description = "Histórico recuperado com sucesso")
+    @ApiResponse(responseCode = "404", description = "Cliente não encontrado")
+    public List<API.ProjetoPosXP.dto.PedidoDTO> consultarHistorico(@PathVariable Long id) {
+        return appFacade.consultarHistoricoPedidos(id);
+    }
+
+
     @GetMapping("/{id}")
     @Operation(summary = "Buscar cliente por ID", description = "Retorna um único cliente com base no ID fornecido")
     @ApiResponse(responseCode = "200", description = "Cliente encontrado")
