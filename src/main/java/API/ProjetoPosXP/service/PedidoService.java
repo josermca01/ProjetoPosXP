@@ -112,9 +112,10 @@ public class PedidoService {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido", id));
 
-        if (pedido.getStatus() == StatusPedido.CANCELADO) {
-            throw new BusinessException("Pedido já está cancelado");
+        if (pedido.getStatus() != StatusPedido.AGUARDANDO_PAGAMENTO && pedido.getStatus() != StatusPedido.PAGO) {
+            throw new BusinessException("Não é possível cancelar o pedido no status atual: " + pedido.getStatus());
         }
+
 
         pedido.getItens().forEach(item -> {
             Produto produto = item.getProduto();

@@ -130,15 +130,16 @@ class PedidoServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar BusinessException ao cancelar pedido já cancelado")
-    void deveLancarExcecaoPedidoJaCancelado() {
-        pedido.setStatus(StatusPedido.CANCELADO);
+    @DisplayName("Deve lançar BusinessException ao cancelar pedido com status inválido")
+    void deveLancarExcecaoAoCancelarStatusInvalido() {
+        pedido.setStatus(StatusPedido.ENVIADO);
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
 
         assertThatThrownBy(() -> pedidoService.cancelarPedido(1L))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Pedido já está cancelado");
+                .hasMessageContaining("Não é possível cancelar o pedido no status atual: ENVIADO");
     }
+
 
     @Test
     @DisplayName("Deve atualizar status do pedido")
